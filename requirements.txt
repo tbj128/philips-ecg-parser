@@ -1,2 +1,3 @@
 ecg_plot
 biosppy
+tqdm
