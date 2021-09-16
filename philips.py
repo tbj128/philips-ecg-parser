@@ -163,8 +163,12 @@ def parse(input_file):
     crossleadmeasurements = internalmeasurements.findall("crossleadmeasurements")[0]
     if len(crossleadmeasurements.findall("meanqrsdur")) > 0:
         meanqrsdur = crossleadmeasurements.findall("meanqrsdur")[0].text
+    else:
+        meanqrsdur = ""
     if len(crossleadmeasurements.findall("meanprint")) > 0:
         meanprint = crossleadmeasurements.findall("meanprint")[0].text
+    else:
+        meanprint = ""
 
     output_rows = []
     interpretations = root.findall('interpretations')[0]
