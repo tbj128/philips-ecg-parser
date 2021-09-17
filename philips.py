@@ -150,10 +150,8 @@ def parse(input_file):
     generalpatientdata = patient.findall("generalpatientdata")[0]
     age_elem = generalpatientdata.findall("age")[0]
     sex = generalpatientdata.findall("sex")[0].text
+    mrn = generalpatientdata.findall("patientid")[0].text
     dateofbirth = age_elem.findall("dateofbirth")[0].text
-
-    order_info = root.findall("orderinfo")[0]
-    mrn = order_info.findall("ordernumber")[0].text
 
     dataacquisition = root.findall("dataacquisition")[0]
     acquirer = dataacquisition.findall("acquirer")[0]
@@ -214,7 +212,7 @@ def parse(input_file):
         output_row = [report_date, report_time, dateofbirth, sex, mrn, csn, meanqrsdur, meanprint,
                       heartrate, rrint, pdur, qonset, tonset, qtint, qtcb, qtcf, QTcFm, QTcH,
                       pfrontaxis, i40frontaxis, qrsfrontaxis, stfrontaxis, tfrontaxis, phorizaxis, i40horizaxis,
-                      t40horizaxis, qrshorizaxis, sthorizaxis, severity, ",".join(leftstatements)]
+                      t40horizaxis, qrshorizaxis, sthorizaxis, severity, "; ".join(leftstatements)]
         output_rows.append(output_row)
 
     waveforms = root.findall("waveforms")[0]

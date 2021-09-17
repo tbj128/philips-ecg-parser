@@ -27,5 +27,5 @@ with open(output_file, 'w') as csvfile:
     output_rows, processed_leads = parse(input_file)
     for output_row in output_rows:
         csvwriter.writerow(output_row)
-    ecg_plot.plot(np.array(processed_leads), sample_rate=500, title='ECG 12')
+    ecg_plot.plot(np.array(processed_leads), sample_rate=500, title='12-Lead ECG', columns=1)
     ecg_plot.save_as_png(output_ecg_waveform_file.replace(".png", ""))

@@ -44,14 +44,14 @@ date,time,dateofbirth,sex,mrn,csn,meanqrsdur,meanprint,heartrate,rrint,pdur,qons
 ### Usage
 
 ```
-python3 parse_xml_folder.py <input ECG XML folder> <output CSV> <output 12-lead ECG waveforms>
+python3 parse_xml_folder.py -i <input ECG XML folder> -o <output CSV> -n <output 12-lead ECG waveforms> -m <output ECG image folder>
 ```
 
 ### Example
 
 Command:
 ```
-python3 parse_xml_folder.py ecgs output.csv output.npy
+python3 parse_xml_folder.py -i ecgs -o output.csv -n output.npy -m ecg-imgs
 ```
 
 `output.csv`
