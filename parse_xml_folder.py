@@ -14,26 +14,42 @@ from tqdm import tqdm
 import argparse
 from pathlib import Path
 import ecg_plot
+from datetime import datetime
+
 
 #
 # Main Code
 #
 
 def call_parse(args):
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+
     filename, path, output_image_folder = args
-    output_rows, leads = parse(path)
+    print(f"[{dt_string}] Working on {filename}, {path}")
+    try:
+        output_rows, leads = parse(path)
 
-    if output_image_folder is not None:
-        ecg_plot.plot(np.array(leads), sample_rate=500, title='12-Lead ECG', columns=1)
-        ecg_plot.save_as_png(f"{output_image_folder}/{filename.replace('.xml', '')}")
+        if output_image_folder is not None:
+            ecg_plot.plot(np.array(leads), sample_rate=500, title='12-Lead ECG', columns=1)
+            ecg_plot.save_as_png(f"{output_image_folder}/{filename.replace('.xml', '')}")
 
-    return output_rows, leads, filename
+        if leads is None or len(leads.shape) < 2 or leads.shape[0] != 12 or leads.shape[1] != 5500:
+            print(f"[{dt_string}] [ERROR] The extracted waveform was not of the expected shape {filename}: {str(e)}")
+            return None, None, None
+        else:
+            return output_rows, leads, filename
+    except Exception as e:
+        print(f"[{dt_string}] [ERROR] There was a problem processing {filename}: {str(e)}")
+        return None, None, None
+
 
 def main(args):
     input_folder = args.input_folder
     output_file = args.output_file
     output_numpy = args.output_numpy
     output_image_folder = args.output_image_folder
+    max_patients = args.max_patients
 
     if output_image_folder is not None:
         Path(output_image_folder).mkdir(parents=True, exist_ok=True)
@@ -43,23 +59,27 @@ def main(args):
         csvwriter.writerow(["input_file_name", "date", "time", "dateofbirth", "sex", "mrn", "csn", "meanqrsdur", "meanprint", "heartrate", "rrint", "pdur", "qonset", "tonset", "qtint", "qtcb", "qtcf", "QTcFM", "QTcH", "pfrontaxis", "i40frontaxis", "qrsfrontaxis", "stfrontaxis", "tfrontaxis", "phorizaxis", "i40horizaxis", "t40horizaxis", "qrshorizaxis", "sthorizaxis", "severity", "statements"])
 
         fs = []
-        with futures.ProcessPoolExecutor(4) as executor:
+        with futures.ProcessPoolExecutor(64) as executor:
             for filename in os.listdir(input_folder):
                 if filename.endswith(".xml"):
                     future = executor.submit(call_parse, [filename, os.path.join(input_folder, filename), output_image_folder])
                     fs.append(future)
+                    if max_patients is not None and len(fs) >= int(max_patients):
+                        break
 
             overall_processed_leads = []
-            for future in tqdm(futures.as_completed(fs), total=len(fs)):
+            for future in futures.as_completed(fs):
                 output_rows, processed_leads, filename = future.result(timeout=60)
-                for output_row in output_rows:
-                    csvwriter.writerow([filename] + output_row)
+                if filename is not None and len(output_rows) > 0:
+                    csvwriter.writerow([filename] + output_rows[0])
 
-                if output_numpy is not None:
-                    overall_processed_leads.append(processed_leads)
+                    if output_numpy is not None:
+                        overall_processed_leads.append(processed_leads)
 
             if output_numpy is not None:
                 np.save(output_numpy, np.array(overall_processed_leads))
+
+    print(f"Completed")
 
 
 if __name__ == '__main__':
@@ -76,6 +96,9 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--output-image-folder',
                         required=False,
                         help='The path to the output PNG folder')
+    parser.add_argument('-p', '--max-patients',
+                        required=False,
+                        help='The maximum number of patients to process')
 
     args = parser.parse_args()
 
