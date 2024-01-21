@@ -146,74 +146,102 @@ def parse(input_file):
     report_date = reportinfo.attrib["date"]
     report_time = reportinfo.attrib["time"]
 
-    patient = root.findall("patient")[0]
-    generalpatientdata = patient.findall("generalpatientdata")[0]
-    age_elem = generalpatientdata.findall("age")[0]
-    sex = generalpatientdata.findall("sex")[0].text
-    mrn = generalpatientdata.findall("patientid")[0].text
-    dateofbirth = age_elem.findall("dateofbirth")[0].text
+    patients = root.findall("patient")
+    sex = ""
+    mrn = ""
+    dateofbirth = ""
+    if len(patients) > 0:
+        patient = patients[0]
+        generalpatientdatas = patient.findall("generalpatientdata")
+        if len(generalpatientdatas) > 0:
+            generalpatientdata = generalpatientdatas[0]
+            age_elems = generalpatientdata.findall("age")
+            if len(age_elems) > 0:
+                age_elem = age_elems[0]
+                dateofbirths = age_elem.findall("dateofbirth")
+                if len(dateofbirths) > 0:
+                    dateofbirth = dateofbirths[0].text
+            sexs = generalpatientdata.findall("sex")
+            if len(sexs) > 0:
+                sex = sexs[0].text
+            mrns = generalpatientdata.findall("patientid")
+            if len(mrns) > 0:
+                mrn = mrns[0].text
 
-    dataacquisition = root.findall("dataacquisition")[0]
-    acquirer = dataacquisition.findall("acquirer")[0]
-    csn = acquirer.findall("encounterid")[0].text
+    csn = ""
+    dataacquisitions = root.findall("dataacquisition")
+    if len(dataacquisitions) > 0:
+        dataacquisition = dataacquisitions[0]
+        acquirers = dataacquisition.findall("acquirer")
+        if len(acquirers) > 0:
+            acquirer = acquirers[0]
+            encounterids = acquirer.findall("encounterid")
+            if len(encounterids) > 0:
+                csn = encounterids[0].text
 
-    internalmeasurements = root.findall("internalmeasurements")[0]
-    crossleadmeasurements = internalmeasurements.findall("crossleadmeasurements")[0]
-    if len(crossleadmeasurements.findall("meanqrsdur")) > 0:
-        meanqrsdur = crossleadmeasurements.findall("meanqrsdur")[0].text
-    else:
-        meanqrsdur = ""
-    if len(crossleadmeasurements.findall("meanprint")) > 0:
-        meanprint = crossleadmeasurements.findall("meanprint")[0].text
-    else:
-        meanprint = ""
+    meanqrsdur = ""
+    meanprint = ""
+    internalmeasurementslist = root.findall("internalmeasurements")
+    if len(internalmeasurementslist) > 0:
+        internalmeasurements = internalmeasurementslist[0]
+        crossleadmeasurementslist = internalmeasurements.findall("crossleadmeasurements")
+        if len(crossleadmeasurementslist) > 0:
+            crossleadmeasurements = crossleadmeasurementslist[0]
+            if len(crossleadmeasurements.findall("meanqrsdur")) > 0:
+                meanqrsdur = crossleadmeasurements.findall("meanqrsdur")[0].text
+            if len(crossleadmeasurements.findall("meanprint")) > 0:
+                meanprint = crossleadmeasurements.findall("meanprint")[0].text
 
     output_rows = []
-    interpretations = root.findall('interpretations')[0]
-    for interpretation in interpretations.findall('interpretation'):
-        globalmeasurements = interpretation.findall('globalmeasurements')[0]
-        heartrate = get_global_measurement(globalmeasurements, 'heartrate')
-        rrint = get_global_measurement(globalmeasurements, 'rrint')
-        pdur = get_global_measurement(globalmeasurements, 'pdur')
-        qonset = get_global_measurement(globalmeasurements, 'qonset')
-        qrsdur = get_global_measurement(globalmeasurements, 'qrsdur')
-        tonset = get_global_measurement(globalmeasurements, 'tonset')
-        qtint = get_global_measurement(globalmeasurements, 'qtint')
-        qtcb = get_global_measurement(globalmeasurements, 'qtcb')
-        qtcf = get_global_measurement(globalmeasurements, 'qtcf')
-        QTcFm = ""
-        QTcH = ""
-        for qtco in globalmeasurements.findall('qtco'):
-            if qtco.attrib["label"] == 'QTcFm':
-                QTcFm = qtco.text
-            elif qtco.attrib["label"] == 'QTcH':
-                QTcH = qtco.text
-        pfrontaxis = get_global_measurement(globalmeasurements, 'pfrontaxis')
-        i40frontaxis = get_global_measurement(globalmeasurements, 'i40frontaxis')
-        qrsfrontaxis = get_global_measurement(globalmeasurements, 'qrsfrontaxis')
-        stfrontaxis = get_global_measurement(globalmeasurements, 'stfrontaxis')
-        tfrontaxis = get_global_measurement(globalmeasurements, 'tfrontaxis')
-        phorizaxis = get_global_measurement(globalmeasurements, 'phorizaxis')
-        i40horizaxis = get_global_measurement(globalmeasurements, 'i40horizaxis')
-        t40horizaxis = get_global_measurement(globalmeasurements, 't40horizaxis')
-        qrshorizaxis = get_global_measurement(globalmeasurements, 'qrshorizaxis')
-        sthorizaxis = get_global_measurement(globalmeasurements, 'sthorizaxis')
-        try:
-            severity = interpretation.findall('severity')[0].text.replace("-", "").strip()
-        except Exception as e:
-            severity = ""
-        statements = interpretation.findall('statement')
-        leftstatements = []
-        for statement in statements:
-            leftstatement = statement.findall('leftstatement')[0].text
-            if leftstatement is not None:
-                leftstatements.append(leftstatement)
+    intepretationslist = root.findall('interpretations')
+    if len(intepretationslist) > 0:
+        interpretations = intepretationslist[0]
+        for interpretation in interpretations.findall('interpretation'):
+            globalmeasurementslist = interpretation.findall('globalmeasurements')
+            if len(globalmeasurementslist) > 0:
+                globalmeasurements = globalmeasurementslist[0]
+                heartrate = get_global_measurement(globalmeasurements, 'heartrate')
+                rrint = get_global_measurement(globalmeasurements, 'rrint')
+                pdur = get_global_measurement(globalmeasurements, 'pdur')
+                qonset = get_global_measurement(globalmeasurements, 'qonset')
+                qrsdur = get_global_measurement(globalmeasurements, 'qrsdur')
+                tonset = get_global_measurement(globalmeasurements, 'tonset')
+                qtint = get_global_measurement(globalmeasurements, 'qtint')
+                qtcb = get_global_measurement(globalmeasurements, 'qtcb')
+                qtcf = get_global_measurement(globalmeasurements, 'qtcf')
+                QTcFm = ""
+                QTcH = ""
+                for qtco in globalmeasurements.findall('qtco'):
+                    if qtco.attrib["label"] == 'QTcFm':
+                        QTcFm = qtco.text
+                    elif qtco.attrib["label"] == 'QTcH':
+                        QTcH = qtco.text
+                pfrontaxis = get_global_measurement(globalmeasurements, 'pfrontaxis')
+                i40frontaxis = get_global_measurement(globalmeasurements, 'i40frontaxis')
+                qrsfrontaxis = get_global_measurement(globalmeasurements, 'qrsfrontaxis')
+                stfrontaxis = get_global_measurement(globalmeasurements, 'stfrontaxis')
+                tfrontaxis = get_global_measurement(globalmeasurements, 'tfrontaxis')
+                phorizaxis = get_global_measurement(globalmeasurements, 'phorizaxis')
+                i40horizaxis = get_global_measurement(globalmeasurements, 'i40horizaxis')
+                t40horizaxis = get_global_measurement(globalmeasurements, 't40horizaxis')
+                qrshorizaxis = get_global_measurement(globalmeasurements, 'qrshorizaxis')
+                sthorizaxis = get_global_measurement(globalmeasurements, 'sthorizaxis')
+                try:
+                    severity = interpretation.findall('severity')[0].text.replace("-", "").strip()
+                except Exception as e:
+                    severity = ""
+                statements = interpretation.findall('statement')
+                leftstatements = []
+                for statement in statements:
+                    leftstatement = statement.findall('leftstatement')[0].text
+                    if leftstatement is not None:
+                        leftstatements.append(leftstatement)
 
-        output_row = [report_date, report_time, dateofbirth, sex, mrn, csn, meanqrsdur, meanprint,
-                      heartrate, rrint, pdur, qonset, tonset, qtint, qtcb, qtcf, QTcFm, QTcH,
-                      pfrontaxis, i40frontaxis, qrsfrontaxis, stfrontaxis, tfrontaxis, phorizaxis, i40horizaxis,
-                      t40horizaxis, qrshorizaxis, sthorizaxis, severity, "; ".join(leftstatements)]
-        output_rows.append(output_row)
+                output_row = [report_date, report_time, dateofbirth, sex, mrn, csn, meanqrsdur, meanprint,
+                              heartrate, rrint, pdur, qonset, qrsdur, tonset, qtint, qtcb, qtcf, QTcFm, QTcH,
+                              pfrontaxis, i40frontaxis, qrsfrontaxis, stfrontaxis, tfrontaxis, phorizaxis, i40horizaxis,
+                              t40horizaxis, qrshorizaxis, sthorizaxis, severity, "; ".join(leftstatements)]
+                output_rows.append(output_row)
 
     waveforms = root.findall("waveforms")[0]
     waveform = waveforms.findall("parsedwaveforms")[0].text.replace("\n", "")
